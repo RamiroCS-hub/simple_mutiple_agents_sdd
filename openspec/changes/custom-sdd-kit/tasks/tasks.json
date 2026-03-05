@@ -1,0 +1,732 @@
+{
+  "feature": "custom-sdd-kit",
+  "generated_at": "2026-03-05",
+  "spec_refs": [
+    "specs/functional/spec.md",
+    "specs/technical/spec.md",
+    "proposal.md"
+  ],
+  "layers": [
+    {
+      "id": "L1",
+      "name": "Shared Contracts",
+      "description": "Archivos base que todos los agentes y skills leen. Deben existir antes que cualquier otra cosa.",
+      "tasks": [
+        {
+          "id": "1.1",
+          "title": "Create persistence-contract.md",
+          "description": "Contrato de persistencia file-first. Define que el único modo es openspec (filesystem). Sin modos alternativos. Todos los agentes lo leen para saber dónde escribir artefactos.",
+          "files": ["~/.claude/skills/custom-sdd-kit/_shared/persistence-contract.md"],
+          "acceptance_criteria": [
+            "Define explícitamente que no existe modo engram ni none",
+            "Especifica la ruta raíz sdd/ como única fuente de verdad",
+            "Define el formato de rutas para cada tipo de artefacto"
+          ],
+          "spec_refs": ["specs/technical/spec.md#ADR-001"],
+          "status": "pending",
+          "tdd": false
+        },
+        {
+          "id": "1.2",
+          "title": "Create directory-convention.md",
+          "description": "Convención canónica de estructura de directorios sdd/. Define la estructura exacta de sdd/wip/XXX-nombre/ y cada archivo esperado en cada fase. Es la referencia que todos los agentes usan para saber dónde leer/escribir.",
+          "files": ["~/.claude/skills/custom-sdd-kit/_shared/directory-convention.md"],
+          "acceptance_criteria": [
+            "Define estructura completa de sdd/wip/XXX-nombre/ con todas las subcarpetas",
+            "Especifica nombre exacto de cada artefacto (meta.md, spec.md, tasks.json, etc.)",
+            "Define formato de numeración XXX (3 dígitos, globalmente único)",
+            "Incluye estructura de sdd/features/ para archivados",
+            "Define schema de meta.md con todos sus campos"
+          ],
+          "spec_refs": ["specs/technical/spec.md#estructura-de-artefactos"],
+          "status": "pending",
+          "tdd": false
+        },
+        {
+          "id": "1.3",
+          "title": "Create conventional-commits.md",
+          "description": "Referencia completa de Conventional Commits. Tabla de tipos, reglas de formato, ejemplos. Usada por sdd-git-manager para generar mensajes de commit.",
+          "files": ["~/.claude/skills/custom-sdd-kit/_shared/conventional-commits.md"],
+          "acceptance_criteria": [
+            "Tabla de tipos: feat, fix, docs, style, refactor, test, chore, ci, perf, revert",
+            "Formato: tipo(scope): descripción",
+            "Reglas: imperativo presente, inglés, sin punto final, scope en kebab-case",
+            "Ejemplos correctos e incorrectos para cada tipo",
+            "Sección de breaking changes con sintaxis feat!:"
+          ],
+          "spec_refs": ["specs/technical/spec.md#convención-conventional-commits"],
+          "status": "pending",
+          "tdd": false
+        },
+        {
+          "id": "1.4",
+          "title": "Create quality-gates-protocol.md",
+          "description": "Protocolo detallado de code review y security scan. Define qué analiza cada gate, las severidades (CRITICAL/WARNING/SUGGESTION) y las reglas de bloqueo. Usado por sdd-code-reviewer, sdd-security-scanner y las skills sdd.build y sdd.git.",
+          "files": ["~/.claude/skills/custom-sdd-kit/_shared/quality-gates-protocol.md"],
+          "acceptance_criteria": [
+            "Sección Code Review: criterios de naming, complejidad, duplicación, error handling, type safety, tests",
+            "Sección Security: lista OWASP Top 10 con descripción de qué detectar para cada ítem",
+            "Definición de severidades: CRITICAL (bloquea), WARNING (no bloquea push, sí merge), SUGGESTION",
+            "Regla explícita: en sdd.build los gates son opcionales, en sdd.git son obligatorios",
+            "Formato estándar de reporte de hallazgos"
+          ],
+          "spec_refs": ["specs/technical/spec.md#flujo-detallado-sdd.git", "specs/functional/spec.md#REQ-06"],
+          "status": "pending",
+          "tdd": false
+        }
+      ]
+    },
+    {
+      "id": "L2",
+      "name": "Planning Agents",
+      "description": "Agent specs del grupo de planning. Estos agentes cubren la fase de análisis, propuesta, especificación y diseño.",
+      "tasks": [
+        {
+          "id": "2.1",
+          "title": "Create agents/sdd-explorer.md",
+          "description": "Agent spec del explorador de codebase. Lee el proyecto para entender stack, arquitectura, convenciones y contexto antes de proponer. Corre solo en modo read-only.",
+          "files": ["~/.claude/skills/custom-sdd-kit/agents/sdd-explorer.md"],
+          "acceptance_criteria": [
+            "Frontmatter: model: sonnet, tools: [Read, Glob, Grep]",
+            "Define qué archivos leer para detectar stack (package.json, go.mod, pyproject.toml, etc.)",
+            "Define qué buscar: convenciones de test, linters, CI, estructura de directorios",
+            "Output estructurado: stack, arquitectura observada, convenciones, contexto relevante para la propuesta",
+            "Regla explícita: NO modifica ningún archivo"
+          ],
+          "spec_refs": ["specs/technical/spec.md#tabla-de-agentes", "specs/functional/spec.md#REQ-02"],
+          "status": "pending",
+          "tdd": false
+        },
+        {
+          "id": "2.2",
+          "title": "Create agents/sdd-proposer.md",
+          "description": "Agent spec del redactor de propuestas. Toma el output del explorador y genera proposal.md con intent, scope, approach, risks y rollback plan.",
+          "files": ["~/.claude/skills/custom-sdd-kit/agents/sdd-proposer.md"],
+          "acceptance_criteria": [
+            "Frontmatter: model: sonnet, tools: [Read, Write]",
+            "Define template completo de proposal.md (intent, scope in/out, approach, affected areas, risks, rollback, dependencies, success criteria)",
+            "Regla: siempre incluir rollback plan y success criteria",
+            "Regla: usar rutas concretas de archivos en affected areas cuando sea posible",
+            "Output: path del proposal.md creado + resumen en 4 líneas"
+          ],
+          "spec_refs": ["specs/technical/spec.md#tabla-de-agentes"],
+          "status": "pending",
+          "tdd": false
+        },
+        {
+          "id": "2.3",
+          "title": "Create agents/sdd-spec-writer.md",
+          "description": "Agent spec del redactor de especificaciones. Genera specs funcionales (WHAT, sin tecnología) y técnicas (HOW, con ADRs). Soporta anotaciones brownfield.",
+          "files": ["~/.claude/skills/custom-sdd-kit/agents/sdd-spec-writer.md"],
+          "acceptance_criteria": [
+            "Frontmatter: model: sonnet, tools: [Read, Write]",
+            "Define template de spec funcional: requirements con GWT, keywords RFC 2119",
+            "Define template de spec técnica: ADRs con context/decision/consequences/alternatives",
+            "Regla: specs funcionales NO deben mencionar tecnologías específicas",
+            "Soporta anotaciones <!-- overrides/extends/deprecates --> con instrucción de cuándo usarlas",
+            "Output: tabla de requirements y escenarios cubiertos por tipo (happy/edge/error)"
+          ],
+          "spec_refs": ["specs/functional/spec.md#REQ-04", "specs/technical/spec.md#tabla-de-agentes"],
+          "status": "pending",
+          "tdd": false
+        },
+        {
+          "id": "2.4",
+          "title": "Create agents/sdd-designer.md",
+          "description": "Agent spec del diseñador de arquitectura. Toma specs y propone diseño técnico profundo con trade-offs. Usa modelo opus para razonamiento complejo.",
+          "files": ["~/.claude/skills/custom-sdd-kit/agents/sdd-designer.md"],
+          "acceptance_criteria": [
+            "Frontmatter: model: opus, tools: [Read, Glob, Write]",
+            "Framework de decisión: contexto → opciones → evaluación → recomendación con trade-offs aceptados",
+            "Define cuándo crear ADRs formales vs. notas de diseño",
+            "Sección de patrones de arquitectura comunes con diagramas ASCII",
+            "Regla: cada decisión debe tener al menos 2 alternativas consideradas y rechazadas",
+            "Output: sección de Architecture Decisions lista para incluir en spec técnica"
+          ],
+          "spec_refs": ["specs/technical/spec.md#tabla-de-agentes"],
+          "status": "pending",
+          "tdd": false
+        },
+        {
+          "id": "2.5",
+          "title": "Create agents/sdd-task-planner.md",
+          "description": "Agent spec del planificador de tareas. Analiza specs y diseño, genera tasks.json con capas, dependencias y acceptance criteria concretos.",
+          "files": ["~/.claude/skills/custom-sdd-kit/agents/sdd-task-planner.md"],
+          "acceptance_criteria": [
+            "Frontmatter: model: sonnet, tools: [Read, Write]",
+            "Define schema completo de tasks.json con layers, tasks, spec_refs, acceptance_criteria",
+            "Define 5 capas estándar: Foundation, Core, Integration, Tests, Cleanup",
+            "Regla: cada tarea referencia al menos un escenario de spec en spec_refs",
+            "Regla: cada tarea debe ser completable en una sola sesión (si no, dividir)",
+            "Regla: detectar si el proyecto usa TDD y marcar tasks con tdd: true/false",
+            "Output: tabla de fases con cantidad de tareas y resumen de dependencias"
+          ],
+          "spec_refs": ["specs/functional/spec.md#REQ-05", "specs/technical/spec.md#schema-tasksjson"],
+          "status": "pending",
+          "tdd": false
+        }
+      ]
+    },
+    {
+      "id": "L3",
+      "name": "Implementation Agents",
+      "description": "Agent specs del grupo de implementación. Escriben código de producción.",
+      "tasks": [
+        {
+          "id": "3.1",
+          "title": "Create agents/sdd-implementer.md",
+          "description": "Agent spec del implementador de código. Escribe código de producción real desde specs y tasks. Sin stubs vacíos, sin TODOs, sin return nil sin lógica.",
+          "files": ["~/.claude/skills/custom-sdd-kit/agents/sdd-implementer.md"],
+          "acceptance_criteria": [
+            "Frontmatter: model: sonnet, tools: [Read, Glob, Grep, Edit, Write, Bash]",
+            "Protocolo de 3 fases: leer antes de escribir → implementar → verificar local",
+            "Regla explícita: NUNCA dejar stubs vacíos, TODOs sin implementar o return nil sin lógica",
+            "Checklist pre-implementación: leer patrones existentes, naming, imports, error handling",
+            "Output: tabla de archivos creados/modificados + estado de acceptance_criteria"
+          ],
+          "spec_refs": ["specs/functional/spec.md#REQ-06", "specs/technical/spec.md#tabla-de-agentes"],
+          "status": "pending",
+          "tdd": false
+        },
+        {
+          "id": "3.2",
+          "title": "Create agents/sdd-tdd-runner.md",
+          "description": "Agent spec del runner de TDD. Ejecuta el ciclo RED→GREEN→REFACTOR por tarea. Verifica que el test FALLA en RED antes de escribir código.",
+          "files": ["~/.claude/skills/custom-sdd-kit/agents/sdd-tdd-runner.md"],
+          "acceptance_criteria": [
+            "Frontmatter: model: sonnet, tools: [Read, Glob, Grep, Edit, Write, Bash]",
+            "Define ciclo completo: RED (escribir test que falla) → GREEN (mínimo código) → REFACTOR (limpiar)",
+            "Regla: en RED, si el test pasa inmediatamente → el test es incorrecto, reportar y detener",
+            "Detección automática del test runner desde PROJECT.md o convenciones del repo",
+            "Regla: en cada fase ejecutar SOLO los tests del módulo modificado (no el suite completo)",
+            "Output por tarea: tabla RED/GREEN/REFACTOR con resultado de ejecución en cada fase"
+          ],
+          "spec_refs": ["specs/functional/spec.md#REQ-06"],
+          "status": "pending",
+          "tdd": false
+        }
+      ]
+    },
+    {
+      "id": "L4",
+      "name": "Quality Gate Agents",
+      "description": "Agent specs de los agentes de calidad. Estos son invocados opcionalmente durante build y obligatoriamente en sdd.git.",
+      "tasks": [
+        {
+          "id": "4.1",
+          "title": "Create agents/sdd-code-reviewer.md",
+          "description": "Agent spec del revisor de código. Analiza un diff por calidad: naming, complejidad, duplicación, error handling, type safety. Sin MCPs externos.",
+          "files": ["~/.claude/skills/custom-sdd-kit/agents/sdd-code-reviewer.md"],
+          "acceptance_criteria": [
+            "Frontmatter: model: sonnet, tools: [Read, Glob, Grep]",
+            "Analiza: naming, complejidad ciclomática, duplicación, error handling, type safety, docs de APIs públicas",
+            "Usa severidades definidas en _shared/quality-gates-protocol.md",
+            "Formato de reporte: hallazgo | archivo:línea | severidad | sugerencia de fix",
+            "Regla: no modifica código, solo reporta",
+            "Output: reporte estructurado + veredicto: PASS / PASS WITH WARNINGS / FAIL"
+          ],
+          "spec_refs": ["specs/functional/spec.md#REQ-06", "specs/technical/spec.md#protocolo-quality-gates"],
+          "status": "pending",
+          "tdd": false
+        },
+        {
+          "id": "4.2",
+          "title": "Create agents/sdd-security-scanner.md",
+          "description": "Agent spec del scanner de seguridad. Analiza un diff contra OWASP Top 10. Sin herramientas externas en v1 — análisis estático de Claude.",
+          "files": ["~/.claude/skills/custom-sdd-kit/agents/sdd-security-scanner.md"],
+          "acceptance_criteria": [
+            "Frontmatter: model: sonnet, tools: [Read, Glob, Grep]",
+            "Cubre los 10 ítems de OWASP Top 10 con criterios de detección para cada uno",
+            "Detecta: secrets hardcodeados, SQL/command injection, XSS, auth issues, crypto débil",
+            "Formato de reporte: vulnerabilidad | tipo OWASP | archivo:línea | severidad | fix recomendado",
+            "Nota sobre extensibilidad: sección donde menciona que en v2 puede integrarse semgrep/bandit",
+            "Regla: no modifica código, solo reporta",
+            "Output: reporte + veredicto: PASS / FAIL"
+          ],
+          "spec_refs": ["specs/functional/spec.md#REQ-06", "specs/technical/spec.md#protocolo-quality-gates"],
+          "status": "pending",
+          "tdd": false
+        }
+      ]
+    },
+    {
+      "id": "L5",
+      "name": "Verification & Git Agents",
+      "description": "Agent specs de verificación, consistencia y flujo git.",
+      "tasks": [
+        {
+          "id": "5.1",
+          "title": "Create agents/sdd-verifier.md",
+          "description": "Agent spec del verificador. Ejecuta tests reales, genera la Spec Compliance Matrix cruzando cada escenario de spec contra resultados de tests.",
+          "files": ["~/.claude/skills/custom-sdd-kit/agents/sdd-verifier.md"],
+          "acceptance_criteria": [
+            "Frontmatter: model: sonnet, tools: [Read, Glob, Grep, Bash]",
+            "Pasos: completeness check → build → test execution → coverage (si configurado) → Spec Compliance Matrix",
+            "Spec Compliance Matrix: columnas requirement | scenario | test file | test name | resultado",
+            "Estados de compliance: COMPLIANT ✅ | FAILING ❌ | UNTESTED ❌ | PARTIAL ⚠️",
+            "Regla: un escenario es COMPLIANT solo si el test EXISTE y PASÓ en esta ejecución",
+            "Persiste reporte en sdd/wip/XXX/5-verify/report.md",
+            "Veredicto: PASS / PASS WITH WARNINGS / FAIL con definición de cuándo aplica cada uno"
+          ],
+          "spec_refs": ["specs/functional/spec.md#REQ-07"],
+          "status": "pending",
+          "tdd": false
+        },
+        {
+          "id": "5.2",
+          "title": "Create agents/sdd-checker.md",
+          "description": "Agent spec del verificador de consistencia cross-layer. Detecta tareas sin respaldo en spec y escenarios sin tareas asociadas.",
+          "files": ["~/.claude/skills/custom-sdd-kit/agents/sdd-checker.md"],
+          "acceptance_criteria": [
+            "Frontmatter: model: haiku, tools: [Read, Glob]",
+            "Detecta tareas en tasks.json sin escenario de spec que las origine (WARNING)",
+            "Detecta escenarios en spec sin tarea asociada en tasks.json (WARNING)",
+            "Detecta tareas marcadas done en progress.md sin commits en git (SUGGESTION)",
+            "Output: reporte tabular de inconsistencias con severidad"
+          ],
+          "spec_refs": ["specs/functional/spec.md#REQ-09"],
+          "status": "pending",
+          "tdd": false
+        },
+        {
+          "id": "5.3",
+          "title": "Create agents/sdd-git-manager.md",
+          "description": "Agent spec del gestor de git. Maneja branches (gitflow), agrupa cambios en commits con CC, y ejecuta el push. Trabaja en 3 fases separadas invocadas por la skill.",
+          "files": ["~/.claude/skills/custom-sdd-kit/agents/sdd-git-manager.md"],
+          "acceptance_criteria": [
+            "Frontmatter: model: haiku, tools: [Read, Bash]",
+            "Fase 1 (análisis): lee meta.md, corre git status, propone commits agrupados por tipo",
+            "Fase 2 (commit): ejecuta los commits aprobados por el usuario",
+            "Fase 3 (push): ejecuta git push origin {branch}",
+            "Lógica de agrupación: *.test.* → test, sdd/* → docs, src/* → feat/fix según tipo en meta.md",
+            "Formato de mensajes: lee _shared/conventional-commits.md",
+            "Output fase 1: tabla propuesta de commits para confirmación del usuario"
+          ],
+          "spec_refs": ["specs/functional/spec.md#REQ-08", "specs/technical/spec.md#flujo-detallado-sdd.git"],
+          "status": "pending",
+          "tdd": false
+        }
+      ]
+    },
+    {
+      "id": "L6",
+      "name": "Maintenance Agents",
+      "description": "Agent specs de mantenimiento del proyecto: archivado, debug, reverse engineering, backlog.",
+      "tasks": [
+        {
+          "id": "6.1",
+          "title": "Create agents/sdd-archiver.md",
+          "description": "Agent spec del archivador. Mueve una feature de wip/ a features/, actualiza meta.md y actualiza el índice del proyecto.",
+          "files": ["~/.claude/skills/custom-sdd-kit/agents/sdd-archiver.md"],
+          "acceptance_criteria": [
+            "Frontmatter: model: haiku, tools: [Read, Write, Bash]",
+            "Verifica pre-condición: verify report en estado PASS antes de archivar",
+            "Mueve sdd/wip/XXX/ a sdd/features/XXX/ (git mv para preservar historial)",
+            "Actualiza meta.md: estado → done, fecha de archivado",
+            "Output: confirmación de archivado con path final"
+          ],
+          "spec_refs": ["specs/functional/spec.md#REQ-02"],
+          "status": "pending",
+          "tdd": false
+        },
+        {
+          "id": "6.2",
+          "title": "Create agents/sdd-debugger.md",
+          "description": "Agent spec del debugger. Hace root cause analysis de errores o comportamientos inesperados. Usa modelo opus para razonamiento complejo.",
+          "files": ["~/.claude/skills/custom-sdd-kit/agents/sdd-debugger.md"],
+          "acceptance_criteria": [
+            "Frontmatter: model: opus, tools: [Read, Glob, Grep, Bash]",
+            "Protocolo: reproducir el problema → hipótesis → verificar hipótesis → fix o recomendación",
+            "Siempre busca root cause, no síntomas",
+            "Regla: no hace fix directamente — reporta el root cause y el fix recomendado al orchestrator",
+            "Output: reporte de root cause + fix recomendado con archivos y cambios concretos"
+          ],
+          "spec_refs": ["specs/technical/spec.md#tabla-de-agentes"],
+          "status": "pending",
+          "tdd": false
+        },
+        {
+          "id": "6.3",
+          "title": "Create agents/sdd-reverse-engineer.md",
+          "description": "Agent spec del reverse engineer. Infiere specs funcionales y técnicas desde código existente sin modificar ningún archivo de código fuente.",
+          "files": ["~/.claude/skills/custom-sdd-kit/agents/sdd-reverse-engineer.md"],
+          "acceptance_criteria": [
+            "Frontmatter: model: sonnet, tools: [Read, Glob, Grep, Write]",
+            "Regla explícita: NUNCA modifica archivos de código fuente (solo lee)",
+            "Escribe specs en sdd/features/000-reverse-eng-{nombre}/",
+            "Agrega nota en el header de cada spec: 'Generado por reverse engineering — validar con el equipo'",
+            "Infiere: user stories desde endpoints/handlers, reglas de negocio desde servicios, contratos desde interfaces",
+            "Output: tabla de specs generadas con cantidad de requisitos y escenarios inferidos"
+          ],
+          "spec_refs": ["specs/functional/spec.md#REQ-10"],
+          "status": "pending",
+          "tdd": false
+        },
+        {
+          "id": "6.4",
+          "title": "Create agents/sdd-backlog-manager.md",
+          "description": "Agent spec del gestor de backlog. CRUD de ítems en sdd/backlog.md. Soporta tipos TODO, DEBT, IDEA.",
+          "files": ["~/.claude/skills/custom-sdd-kit/agents/sdd-backlog-manager.md"],
+          "acceptance_criteria": [
+            "Frontmatter: model: haiku, tools: [Read, Edit]",
+            "Operaciones: add, list (con filtros), done, remove",
+            "Schema de ítem: tipo (TODO/DEBT/IDEA) | título | fecha | estado (OPEN/DONE)",
+            "Soporta filtros por tipo y por estado",
+            "Output: tabla de ítems del backlog filtrada según la operación"
+          ],
+          "spec_refs": ["specs/functional/spec.md#REQ-11"],
+          "status": "pending",
+          "tdd": false
+        },
+        {
+          "id": "6.5",
+          "title": "Create agents/sdd-context-compactor.md",
+          "description": "Agent spec del compactador de contexto. Resume el estado completo de la sesión en ~500 tokens para que el orchestrator pueda continuar sin saturar el contexto. Se invoca automáticamente al superar el 80% o manualmente con /sdd.compact.",
+          "files": ["~/.claude/skills/custom-sdd-kit/agents/sdd-context-compactor.md"],
+          "acceptance_criteria": [
+            "Frontmatter: model: haiku, tools: [Read, Glob]",
+            "Lee sdd/wip/XXX/meta.md, progress.md, tasks.json para reconstruir estado",
+            "Output estructurado en ≤500 tokens: feature activa | tareas completadas | tareas pendientes | decisiones clave tomadas | próximo paso sugerido",
+            "Formato diseñado para ser usado como contexto inicial de la próxima invocación",
+            "NO modifica ningún archivo — solo genera el resumen como output"
+          ],
+          "spec_refs": ["specs/functional/spec.md#REQ-15"],
+          "status": "pending",
+          "tdd": false
+        }
+      ]
+    },
+    {
+      "id": "L7",
+      "name": "Routing Skills",
+      "description": "Skills de routing del orchestrator. Una por cada comando /sdd.*. Livianas — solo dicen CUÁNDO y CÓMO invocar cada sub-agente.",
+      "tasks": [
+        {
+          "id": "7.1",
+          "title": "Create skills/sdd.init/SKILL.md",
+          "description": "Skill de inicialización. Es la única skill que no delega a un sub-agente — el orchestrator la ejecuta directamente porque es simple y predecible.",
+          "files": ["~/.claude/skills/custom-sdd-kit/skills/sdd.init/SKILL.md"],
+          "acceptance_criteria": [
+            "Define triggers: '/sdd.init', 'inicializar sdd', 'sdd init'",
+            "Lógica inline: detecta stack, crea estructura sdd/, genera PROJECT.md y backlog.md",
+            "Maneja 3 casos: proyecto nuevo, ya inicializado, stack desconocido",
+            "Output: resumen de lo creado y stack detectado"
+          ],
+          "spec_refs": ["specs/functional/spec.md#REQ-01"],
+          "status": "pending",
+          "tdd": false
+        },
+        {
+          "id": "7.2",
+          "title": "Create skills/sdd.new/SKILL.md",
+          "description": "Skill de nueva feature. Routing: sdd-explorer → sdd-proposer. Define pre-condiciones, qué contexto pasarle a cada agente y qué hacer con el resultado.",
+          "files": ["~/.claude/skills/custom-sdd-kit/skills/sdd.new/SKILL.md"],
+          "acceptance_criteria": [
+            "Define triggers: '/sdd.new <nombre>', 'nueva feature', 'new feature'",
+            "Pre-condiciones: sdd/ inicializado, nombre de feature provisto",
+            "Define cómo determinar el próximo número XXX disponible",
+            "Invocación de sdd-explorer: qué context pasarle",
+            "Invocación de sdd-proposer: cómo usar el output del explorer como input",
+            "Post-condición: proposal.md creado en sdd/wip/XXX-nombre/"
+          ],
+          "spec_refs": ["specs/technical/spec.md#mapa-de-comandos"],
+          "status": "pending",
+          "tdd": false
+        },
+        {
+          "id": "7.3",
+          "title": "Create skills/sdd.spec/SKILL.md",
+          "description": "Skill de especificación. Routing: sdd-spec-writer (para functional) y sdd-designer (para technical, con sdd-spec-writer). Maneja ambos subtipos.",
+          "files": ["~/.claude/skills/custom-sdd-kit/skills/sdd.spec/SKILL.md"],
+          "acceptance_criteria": [
+            "Maneja /sdd.spec functional y /sdd.spec technical como sub-comandos",
+            "Para functional: invoca solo sdd-spec-writer con output de proposal.md",
+            "Para technical: invoca sdd-designer primero, luego sdd-spec-writer con el diseño",
+            "Define qué archivos de contexto pasarle a cada agente",
+            "Post-condición: spec.md en la carpeta correspondiente (1-functional/ o 2-technical/)"
+          ],
+          "spec_refs": ["specs/technical/spec.md#mapa-de-comandos"],
+          "status": "pending",
+          "tdd": false
+        },
+        {
+          "id": "7.4",
+          "title": "Create skills/sdd.plan/SKILL.md",
+          "description": "Skill de planificación. Routing: sdd-task-planner. Verifica que existan specs antes de invocar.",
+          "files": ["~/.claude/skills/custom-sdd-kit/skills/sdd.plan/SKILL.md"],
+          "acceptance_criteria": [
+            "Pre-condiciones: existen 1-functional/spec.md y 2-technical/spec.md",
+            "Invoca sdd-task-planner con specs como contexto",
+            "Post-condición: 3-tasks/tasks.json creado",
+            "Muestra tabla resumen de layers y cantidad de tareas"
+          ],
+          "spec_refs": ["specs/technical/spec.md#mapa-de-comandos"],
+          "status": "pending",
+          "tdd": false
+        },
+        {
+          "id": "7.5",
+          "title": "Create skills/sdd.build/SKILL.md",
+          "description": "Skill de implementación. El routing más complejo: loop por tareas, detección de TDD, gates opcionales. Define el protocolo completo de sdd.build.",
+          "files": ["~/.claude/skills/custom-sdd-kit/skills/sdd.build/SKILL.md"],
+          "acceptance_criteria": [
+            "Pre-condiciones: tasks.json existe con tareas pending",
+            "Loop por tareas: detecta TDD → invoca sdd-implementer o sdd-tdd-runner",
+            "Define qué contexto pasarle al agente de implementación por tarea",
+            "Post-invocación: pregunta por gates (code review, security scan) — default N",
+            "Si gate solicitado: invoca sdd-code-reviewer o sdd-security-scanner con el diff",
+            "Actualiza progress.md después de cada tarea",
+            "En modo express: omite preguntas de gates",
+            "Output final: tabla de progreso de tasks"
+          ],
+          "spec_refs": ["specs/technical/spec.md#flujo-detallado-sdd.build", "specs/functional/spec.md#REQ-06"],
+          "status": "pending",
+          "tdd": false
+        },
+        {
+          "id": "7.6",
+          "title": "Create skills/sdd.verify/SKILL.md",
+          "description": "Skill de verificación. Routing: sdd-verifier. Simple — invoca el agente y persiste el resultado.",
+          "files": ["~/.claude/skills/custom-sdd-kit/skills/sdd.verify/SKILL.md"],
+          "acceptance_criteria": [
+            "Pre-condiciones: progress.md con al menos una tarea done",
+            "Invoca sdd-verifier con specs, tasks.json y project config como contexto",
+            "El agente persiste el reporte — la skill verifica que se haya creado",
+            "Muestra veredicto final al usuario"
+          ],
+          "spec_refs": ["specs/technical/spec.md#mapa-de-comandos"],
+          "status": "pending",
+          "tdd": false
+        },
+        {
+          "id": "7.7",
+          "title": "Create skills/sdd.git/SKILL.md",
+          "description": "Skill de git. El flujo más complejo del kit: 3 fases de sdd-git-manager + gates obligatorios de code review y security scan.",
+          "files": ["~/.claude/skills/custom-sdd-kit/skills/sdd.git/SKILL.md"],
+          "acceptance_criteria": [
+            "Pre-condiciones: git instalado, meta.md con branch configurada, hay cambios en git status",
+            "Fase 1: invoca sdd-git-manager (análisis), muestra propuesta, espera C/E/A del usuario",
+            "Fase 2: si confirmado, invoca sdd-git-manager (commits)",
+            "Gate code review: invoca sdd-code-reviewer (OBLIGATORIO, sin opción de skip)",
+            "Gate security scan: invoca sdd-security-scanner (OBLIGATORIO, sin opción de skip)",
+            "Si algún gate tiene CRITICAL: bloquea, muestra reporte, termina sin push",
+            "Fase 3: si ambos gates pasan, invoca sdd-git-manager (push)",
+            "Output: URL de branch pusheada o reporte de bloqueo"
+          ],
+          "spec_refs": ["specs/technical/spec.md#flujo-detallado-sdd.git", "specs/functional/spec.md#REQ-08"],
+          "status": "pending",
+          "tdd": false
+        },
+        {
+          "id": "7.8",
+          "title": "Create skills/sdd.ff/SKILL.md",
+          "description": "Skill de fast-forward. Encadena spec-writer → designer → task-planner en secuencia, persistiendo cada artefacto antes del siguiente.",
+          "files": ["~/.claude/skills/custom-sdd-kit/skills/sdd.ff/SKILL.md"],
+          "acceptance_criteria": [
+            "Pre-condiciones: proposal.md existe",
+            "Secuencia: sdd-spec-writer (functional) → sdd-designer → sdd-spec-writer (technical, con output del designer) → sdd-task-planner",
+            "Cada agente recibe el output de los anteriores como contexto adicional",
+            "Verifica que cada artefacto existe en disco antes de continuar con el siguiente",
+            "Output final: resumen consolidado de los 4 artefactos generados"
+          ],
+          "spec_refs": ["specs/technical/spec.md#mapa-de-comandos"],
+          "status": "pending",
+          "tdd": false
+        },
+        {
+          "id": "7.9",
+          "title": "Create skills/sdd.finish/SKILL.md",
+          "description": "Skill de finalización. Encadena: sdd.verify → sdd-archiver → sdd.git. Si verify falla, detiene el flujo.",
+          "files": ["~/.claude/skills/custom-sdd-kit/skills/sdd.finish/SKILL.md"],
+          "acceptance_criteria": [
+            "Invoca sdd-verifier primero — si el resultado es FAIL, detiene y muestra el reporte",
+            "Solo si PASS o PASS WITH WARNINGS: invoca sdd-archiver",
+            "Finalmente: ejecuta el flujo completo de sdd.git (las 3 fases + gates)",
+            "Output: estado final de la feature (archivada) y URL de push"
+          ],
+          "spec_refs": ["specs/technical/spec.md#mapa-de-comandos"],
+          "status": "pending",
+          "tdd": false
+        },
+        {
+          "id": "7.10",
+          "title": "Create skills/sdd.go/SKILL.md — Express mode orchestrator",
+          "description": "La skill más compleja después de sdd.build y sdd.git. Orquesta TODOS los agentes en secuencia express: explorer → proposer → spec-writer (x2) → designer → task-planner → implementer/tdd-runner → verifier → archiver → git-manager. Aplica model escalation según modo.",
+          "files": ["~/.claude/skills/custom-sdd-kit/skills/sdd.go/SKILL.md"],
+          "acceptance_criteria": [
+            "Define las 3-5 preguntas críticas del inicio (tipo de feature, greenfield/brownfield, stack si no detectado)",
+            "Encadena todos los agentes sin confirmaciones intermedias",
+            "Omite quality gates opcionales (code review y security scan durante build)",
+            "Los gates de sdd.git SÍ se ejecutan al final (obligatorios siempre)",
+            "Soporta --expert flag: escala modelos sonnet → claude-opus-4-6",
+            "Si algún agente falla, detiene el flujo y reporta en qué fase falló"
+          ],
+          "spec_refs": ["specs/functional/spec.md#REQ-12", "specs/technical/spec.md#mapa-de-comandos"],
+          "status": "pending",
+          "tdd": false
+        },
+        {
+          "id": "7.11",
+          "title": "Create simple routing skills: sdd.check, sdd.fix, sdd.reverse-eng, sdd.backlog, sdd.compact",
+          "description": "Skills simples de routing directo a un solo agente. Cada una define triggers, pre-condiciones mínimas y qué contexto pasarle al agente.",
+          "files": [
+            "~/.claude/skills/custom-sdd-kit/skills/sdd.check/SKILL.md",
+            "~/.claude/skills/custom-sdd-kit/skills/sdd.fix/SKILL.md",
+            "~/.claude/skills/custom-sdd-kit/skills/sdd.reverse-eng/SKILL.md",
+            "~/.claude/skills/custom-sdd-kit/skills/sdd.backlog/SKILL.md",
+            "~/.claude/skills/custom-sdd-kit/skills/sdd.compact/SKILL.md"
+          ],
+          "acceptance_criteria": [
+            "sdd.check: invoca sdd-checker con todos los artefactos de la feature activa",
+            "sdd.fix: invoca sdd-debugger con el error/síntoma reportado por el usuario como contexto",
+            "sdd.reverse-eng: invoca sdd-reverse-engineer con el módulo o path especificado",
+            "sdd.backlog: invoca sdd-backlog-manager con la operación (add/list/done/remove) y argumentos",
+            "sdd.compact: invoca sdd-context-compactor manualmente, muestra el resumen generado"
+          ],
+          "spec_refs": ["specs/technical/spec.md#mapa-de-comandos"],
+          "status": "pending",
+          "tdd": false
+        },
+        {
+          "id": "7.12",
+          "title": "Create inline skills: sdd.list, sdd.cancel, sdd.rollback, sdd.help",
+          "description": "Skills resueltas inline por el orchestrator sin invocar sub-agentes. Operan sobre el filesystem directamente (git mv, rm, ls) y no requieren razonamiento complejo.",
+          "files": [
+            "~/.claude/skills/custom-sdd-kit/skills/sdd.list/SKILL.md",
+            "~/.claude/skills/custom-sdd-kit/skills/sdd.cancel/SKILL.md",
+            "~/.claude/skills/custom-sdd-kit/skills/sdd.rollback/SKILL.md",
+            "~/.claude/skills/custom-sdd-kit/skills/sdd.help/SKILL.md"
+          ],
+          "acceptance_criteria": [
+            "sdd.list: lee sdd/wip/ y sdd/features/, genera tabla ID|Nombre|Estado|Fase|Fecha. Soporta --active",
+            "sdd.cancel: pide confirmación, elimina sdd/wip/XXX/, pregunta si eliminar branch git",
+            "sdd.rollback: muestra fase actual, pide confirmación, elimina artefacto de última fase, actualiza meta.md",
+            "sdd.help: muestra tabla de todos los comandos con descripción y ejemplo, más modo y feature activa",
+            "Todas manejan el caso de ausencia de features (mensaje amigable)"
+          ],
+          "spec_refs": ["specs/functional/spec.md#REQ-14"],
+          "status": "pending",
+          "tdd": false
+        }
+      ]
+    },
+    {
+      "id": "L8",
+      "name": "Orchestrator Integration",
+      "description": "Integrar el kit con el orchestrator global (CLAUDE.md). Registrar comandos, definir el protocolo de invocación y el contrato de output de sub-agentes.",
+      "tasks": [
+        {
+          "id": "8.1",
+          "title": "Create _shared/agent-invocation-protocol.md",
+          "description": "Define el contrato exacto que el orchestrator usa para invocar cualquier sub-agente: cómo construir el prompt, qué model usar, qué context incluir y cómo procesar el resultado.",
+          "files": ["~/.claude/skills/custom-sdd-kit/_shared/agent-invocation-protocol.md"],
+          "acceptance_criteria": [
+            "Define los 4 pasos: leer agent spec → construir prompt → invocar Task → procesar resultado",
+            "Define el formato del bloque CONTEXT que el orchestrator agrega al prompt base",
+            "Define el output envelope estándar que todos los agentes deben retornar: status, summary, artifacts, next_recommended, risks",
+            "Incluye ejemplo concreto de invocación completa con código"
+          ],
+          "spec_refs": ["specs/technical/spec.md#protocolo-de-invocación-de-sub-agentes"],
+          "status": "pending",
+          "tdd": false
+        },
+        {
+          "id": "8.2",
+          "title": "Document CLAUDE.md integration section",
+          "description": "Crear la sección de integración del kit con el orchestrator global. Define cómo agregar los comandos /sdd.* al CLAUDE.md del usuario.",
+          "files": ["~/.claude/skills/custom-sdd-kit/CLAUDE-INTEGRATION.md"],
+          "acceptance_criteria": [
+            "Tabla de comandos /sdd.* con su skill correspondiente para copiar al CLAUDE.md",
+            "Instrucción de instalación: cp -r custom-sdd-kit ~/.claude/skills/",
+            "Sección de configuración inicial de PROJECT.md",
+            "Nota sobre compatibilidad: no requiere modificar skills sdd-* existentes"
+          ],
+          "spec_refs": ["specs/technical/spec.md#integración-con-el-orchestrator"],
+          "status": "pending",
+          "tdd": false
+        }
+      ]
+    },
+    {
+      "id": "L9",
+      "name": "Validation & Documentation",
+      "description": "Validar que el kit funciona end-to-end y documentar cómo usarlo.",
+      "tasks": [
+        {
+          "id": "9.1",
+          "title": "End-to-end smoke test: Go project",
+          "description": "Correr el kit completo en un proyecto Go de prueba: init → new → ff → build → verify → git. Verificar que todos los artefactos se generan correctamente.",
+          "files": ["~/.claude/skills/custom-sdd-kit/tests/e2e-go.md"],
+          "acceptance_criteria": [
+            "sdd/ se crea con PROJECT.md detectando Go correctamente",
+            "Una feature llega hasta verify con estado PASS",
+            "sdd.git propone commits válidos con formato CC",
+            "Los gates de pre-push se ejecutan y retornan resultado",
+            "Ningún step falla por razones del kit (pueden fallar por el proyecto de prueba)"
+          ],
+          "spec_refs": ["specs/functional/spec.md#REQ-13"],
+          "status": "pending",
+          "tdd": false
+        },
+        {
+          "id": "9.2",
+          "title": "End-to-end smoke test: TypeScript project",
+          "description": "Mismo flujo que 9.1 pero en un proyecto TypeScript + Express.",
+          "files": ["~/.claude/skills/custom-sdd-kit/tests/e2e-typescript.md"],
+          "acceptance_criteria": [
+            "Test runner detectado: jest o vitest",
+            "sdd-tdd-runner ejecuta ciclo RED/GREEN/REFACTOR correctamente",
+            "Todos los artefactos generados en el formato correcto"
+          ],
+          "spec_refs": ["specs/functional/spec.md#REQ-13"],
+          "status": "pending",
+          "tdd": false
+        },
+        {
+          "id": "9.3",
+          "title": "Create README.md del kit",
+          "description": "Documentación de instalación y uso básico del kit. Debe permitir a un nuevo usuario ir de cero a primer commit en menos de 15 minutos.",
+          "files": ["~/.claude/skills/custom-sdd-kit/README.md"],
+          "acceptance_criteria": [
+            "Sección de instalación en 2 pasos (cp + editar CLAUDE.md)",
+            "Quick start: 5 comandos de ejemplo para el flujo completo",
+            "Tabla de todos los comandos con descripción en una línea",
+            "Sección de arquitectura: diferencia entre skills (routing) y agents (workers)",
+            "FAQ con los 5 errores más comunes y su solución"
+          ],
+          "spec_refs": ["proposal.md#success-criteria"],
+          "status": "pending",
+          "tdd": false
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total": 38,
+    "by_layer": {
+      "L1_shared_contracts": 4,
+      "L2_planning_agents": 5,
+      "L3_implementation_agents": 2,
+      "L4_quality_gate_agents": 2,
+      "L5_verification_git_agents": 3,
+      "L6_maintenance_agents": 5,
+      "L7_routing_skills": 12,
+      "L8_orchestrator_integration": 2,
+      "L9_validation_docs": 3
+    },
+    "completed": 0,
+    "pending": 38,
+    "agents_to_create": 17,
+    "skills_to_create": 18,
+    "shared_contracts_to_create": 5,
+    "inline_commands": 4,
+    "changelog": [
+      "6.5: sdd-context-compactor agent (REQ-15)",
+      "7.10: sdd.go separado en tarea propia (W2 fix)",
+      "7.11: sdd.compact + simples unificados",
+      "7.12: sdd.list/cancel/rollback/help inline (W1 fix)",
+      "3.2: spec_ref corregido (S1 fix)",
+      "8.1: agent-invocation-protocol ahora en _shared/ de spec técnica (W3 fix)"
+    ]
+  }
+}
