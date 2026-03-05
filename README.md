@@ -125,6 +125,8 @@ O en modo express:
 
 ## Expert mode
 
+> **Solo disponible en Claude Code.** OpenCode no soporta seleccion de modelo por sub-agente via este mecanismo.
+
 Agrega `--expert` a cualquier comando para escalar el modelo del agente:
 
 - `haiku` por defecto → `sonnet` en expert mode
@@ -254,10 +256,30 @@ openspec/                  <- Artefactos SDD del propio kit
 
 ## Compatibilidad
 
-Stacks soportados: Go, TypeScript/Node.js, Python, Java/Kotlin, Rust.
-El kit detecta el stack automaticamente via `sdd.init`.
+### Herramientas soportadas
 
-Requiere: Claude Code con acceso al Task tool.
+| Herramienta | Soporte | Notas |
+|-------------|---------|-------|
+| **Claude Code** | Completo | Todas las funciones, incluyendo expert mode y multi-agente via Task tool |
+| **OpenCode** | Completo | Todas las funciones excepto expert mode. Usa `install-opencode.sh` |
+
+> OpenCode tambien busca skills en `~/.claude/skills/` — si tenes Claude Code instalado,
+> ambas herramientas comparten las mismas definiciones sin instalar dos veces.
+
+### Funciones por herramienta
+
+| Funcion | Claude Code | OpenCode |
+|---------|-------------|----------|
+| Todos los comandos `/sdd.*` | Si | Si |
+| Multi-agente (sub-agentes) | Si | Si |
+| Quality gates | Si | Si |
+| TDD nativo | Si | Si |
+| Expert mode (`--expert`) | Si | No |
+
+### Stacks soportados
+
+Go, TypeScript/Node.js, Python, Java/Kotlin, Rust.
+El kit detecta el stack automaticamente via `sdd.init`.
 
 ---
 
